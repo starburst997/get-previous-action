@@ -34,6 +34,6 @@ runs:
             -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
             -H 'Accept: application/vnd.github.v3+json' \
             '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}' | \
-          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled" && .conclusion!="failure") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).sha' \
+          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled" and .conclusion!="failure") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).sha' \
         )
         echo "sha=${SHA}" >> $GITHUB_OUTPUT
