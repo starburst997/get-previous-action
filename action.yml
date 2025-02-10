@@ -1,5 +1,5 @@
 name: 'Get previous action'
-description: 'Get the previous run's sha for Github Action'
+description: "Get the previous run's sha for Github Action"
 author: 'Jean-Denis Boivin'
 
 inputs:
