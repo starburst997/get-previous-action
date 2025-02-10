@@ -1,6 +1,8 @@
 # get-previous-action
 Get the previous run's sha for Github Action
 
+My use case was to show the URL to compare the commits between two successful run (manual) 
+
 ## Usage:
 
 ```yml
