@@ -25,6 +25,14 @@ runs:
         echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
         echo "workflow_name=${GITHUB_WORKFLOW}" >> $GITHUB_OUTPUT
 
+    - name: Debug 1
+      shell: bash
+      run: |
+        curl -s -X GET \
+          -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
+          -H 'Accept: application/vnd.github.v3+json' \
+          '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}'
+
     - name: Check previous sha
       id: output
       shell: bash
@@ -34,6 +42,6 @@ runs:
             -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
             -H 'Accept: application/vnd.github.v3+json' \
             '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}' | \
-          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled" and .conclusion!="failure") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).sha' \
+          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).conclusion' \
         )
         echo "sha=${SHA}" >> $GITHUB_OUTPUT
