@@ -19,5 +19,6 @@ runs:
       run: echo "Get previous action..."
 
     - name: Save sha
+      id: output
       shell: bash
       run: echo "sha=1234567" >> $GITHUB_OUTPUT
