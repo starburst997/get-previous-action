@@ -1,8 +1,9 @@
 name: 'Get previous action'
 description: "Get the previous run's sha for Github Action"
 author: 'Jean-Denis Boivin'
-icon: 'skip-back'
-color: 'green'
+branding:
+  icon: 'skip-back'
+  color: 'green'
 
 inputs:
   token:
