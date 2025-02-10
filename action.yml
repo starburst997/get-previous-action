@@ -11,7 +11,7 @@ outputs:
   sha:
     value: ${{ steps.output.outputs.sha }}
   diff-url:
-    value: ${{ steps.output.extra.diff-url }}
+    value: ${{ steps.extra.outputs.diff-url }}
 
 runs:
   using: "composite"
@@ -44,7 +44,7 @@ runs:
       id: extra
       shell: bash
       run: |
-        echo "diff-url=${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.output.outputs.sha }}..${{ github.sha }}" >> $GITHUB_OUTPUT
+        echo "diff-url=${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.output.outputs.sha }}...${{ github.sha }}" >> $GITHUB_OUTPUT
 
     #- name: Debug
     #  shell: bash
