@@ -18,7 +18,22 @@ runs:
       shell: bash
       run: echo "Get previous action..."
 
-    - name: Save sha
+    - name: Get branch name
+      id: extract_info
+      shell: bash
+      run: |
+        echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        echo "workflow_name=${GITHUB_WORKFLOW}" >> $GITHUB_OUTPUT
+
+    - name: Check previous sha
       id: output
       shell: bash
-      run: echo "sha=1234567" >> $GITHUB_OUTPUT
+      run: |
+        SHA=$( \
+          curl -s -X GET \
+            -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
+            -H 'Accept: application/vnd.github.v3+json' \
+            '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}' | \
+          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled" && .conclusion!="failure") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).sha' \
+        )
+        echo "sha=${SHA}" >> $GITHUB_OUTPUT
