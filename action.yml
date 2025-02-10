@@ -1,0 +1,23 @@
+name: 'Get previous action'
+description: 'Get the previous run's sha for Github Action'
+author: 'Jean-Denis Boivin'
+
+inputs:
+  token:
+    description: 'Your Personal Access Token for Github (all repo access)'
+    required: true
+
+outputs:
+  sha:
+    value: ${{ steps.output.outputs.sha }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Display message
+      shell: bash
+      run: echo "Get previous action..."
+
+    - name: Save sha
+      shell: bash
+      run: echo "sha=1234567" >> $GITHUB_OUTPUT

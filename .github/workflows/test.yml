@@ -1,0 +1,20 @@
+name: Test
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [version]
+    steps:
+      - name: Get the url of a diff between this commit and the one from the previous run
+        id: previous
+        uses: starburst997/get-previous-action@v1
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Test
+        run: |
+          echo ${{ steps.previous.outputs.sha }}
