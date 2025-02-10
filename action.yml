@@ -10,6 +10,8 @@ inputs:
 outputs:
   sha:
     value: ${{ steps.output.outputs.sha }}
+  diff-url:
+    value: ${{ steps.output.extra.diff-url }}
 
 runs:
   using: "composite"
@@ -25,14 +27,6 @@ runs:
         echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
         echo "workflow_name=${GITHUB_WORKFLOW}" >> $GITHUB_OUTPUT
 
-    - name: Debug 1
-      shell: bash
-      run: |
-        curl -s -X GET \
-          -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
-          -H 'Accept: application/vnd.github.v3+json' \
-          '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}'
-
     - name: Check previous sha
       id: output
       shell: bash
@@ -42,6 +36,250 @@ runs:
             -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
             -H 'Accept: application/vnd.github.v3+json' \
             '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}' | \
-          jq -r 'first(.workflow_runs[] | select(.conclusion!="cancelled") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).conclusion' \
+          jq -r 'first(.workflow_runs[] | select(.conclusion=="success") | select (.name=="${{ steps.extract_info.outputs.workflow_name }}")).head_sha' \
         )
         echo "sha=${SHA}" >> $GITHUB_OUTPUT
+
+    - name: Extra vars
+      id: extra
+      shell: bash
+      run: |
+        echo "diff-url=${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.output.outputs.sha }}..${{ github.sha }}" >> $GITHUB_OUTPUT
+
+    #- name: Debug
+    #  shell: bash
+    #  run: |
+    #    curl -s -X GET \
+    #      -H 'Authorization: Bearer ${{ inputs.token || github.token }}' \
+    #      -H 'Accept: application/vnd.github.v3+json' \
+    #      '${{ github.api_url }}/repos/${{ github.repository }}/actions/runs?status=completed&page=1&branch=${{ steps.extract_info.outputs.branch }}'
+
+    ## Sample JSON:
+    #{
+    #  "id": 123,
+    #  "name": "Test",
+    #  "node_id": "WFR_xxxxxxxxxxxxxx",
+    #  "head_branch": "main",
+    #  "head_sha": "5b8cea8b5eab5ea8c7b85eac",
+    #  "path": ".github/workflows/test.yml",
+    #  "display_title": "Test",
+    #  "run_number": 7,
+    #  "event": "workflow_dispatch",
+    #  "status": "completed",
+    #  "conclusion": "success",
+    #  "workflow_id": 111111,
+    #  "check_suite_id": 1111111,
+    #  "check_suite_node_id": "CS_fhidsuiuhdsfiuhsdf",
+    #  "url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/1111",
+    #  "html_url": "https://github.com/starburst997/get-previous-action/actions/runs/111111",
+    #  "pull_requests": [
+    #
+    #  ],
+    #  "created_at": "2025-02-10T06:00:19Z",
+    #  "updated_at": "2025-02-10T06:00:31Z",
+    #  "actor": {
+    #    "login": "starburst997",
+    #    "id": 111111,
+    #    "node_id": "XXXXXXX",
+    #    "avatar_url": "https://avatars.githubusercontent.com/u/77518?v=4",
+    #    "gravatar_id": "",
+    #    "url": "https://api.github.com/users/starburst997",
+    #    "html_url": "https://github.com/starburst997",
+    #    "followers_url": "https://api.github.com/users/starburst997/followers",
+    #    "following_url": "https://api.github.com/users/starburst997/following{/other_user}",
+    #    "gists_url": "https://api.github.com/users/starburst997/gists{/gist_id}",
+    #    "starred_url": "https://api.github.com/users/starburst997/starred{/owner}{/repo}",
+    #    "subscriptions_url": "https://api.github.com/users/starburst997/subscriptions",
+    #    "organizations_url": "https://api.github.com/users/starburst997/orgs",
+    #    "repos_url": "https://api.github.com/users/starburst997/repos",
+    #    "events_url": "https://api.github.com/users/starburst997/events{/privacy}",
+    #    "received_events_url": "https://api.github.com/users/starburst997/received_events",
+    #    "type": "User",
+    #    "user_view_type": "public",
+    #    "site_admin": false
+    #  },
+    #  "run_attempt": 1,
+    #  "referenced_workflows": [
+    #
+    #  ],
+    #  "run_started_at": "2025-02-10T06:00:19Z",
+    #  "triggering_actor": {
+    #    "login": "starburst997",
+    #    "id": 77518,
+    #    "node_id": "XXXXXXX",
+    #    "avatar_url": "https://avatars.githubusercontent.com/u/77518?v=4",
+    #    "gravatar_id": "",
+    #    "url": "https://api.github.com/users/starburst997",
+    #    "html_url": "https://github.com/starburst997",
+    #    "followers_url": "https://api.github.com/users/starburst997/followers",
+    #    "following_url": "https://api.github.com/users/starburst997/following{/other_user}",
+    #    "gists_url": "https://api.github.com/users/starburst997/gists{/gist_id}",
+    #    "starred_url": "https://api.github.com/users/starburst997/starred{/owner}{/repo}",
+    #    "subscriptions_url": "https://api.github.com/users/starburst997/subscriptions",
+    #    "organizations_url": "https://api.github.com/users/starburst997/orgs",
+    #    "repos_url": "https://api.github.com/users/starburst997/repos",
+    #    "events_url": "https://api.github.com/users/starburst997/events{/privacy}",
+    #    "received_events_url": "https://api.github.com/users/starburst997/received_events",
+    #    "type": "User",
+    #    "user_view_type": "public",
+    #    "site_admin": false
+    #  },
+    #  "jobs_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/1111/jobs",
+    #  "logs_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/1111/logs",
+    #  "check_suite_url": "https://api.github.com/repos/starburst997/get-previous-action/check-suites/1111",
+    #  "artifacts_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/1111/artifacts",
+    #  "cancel_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/1111/cancel",
+    #  "rerun_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/runs/11111/rerun",
+    #  "previous_attempt_url": null,
+    #  "workflow_url": "https://api.github.com/repos/starburst997/get-previous-action/actions/workflows/111111",
+    #  "head_commit": {
+    #    "id": "1111e11ee1e1e1e",
+    #    "tree_id": "1e1e1e1e1e1e1e1ee1",
+    #    "message": "try with and",
+    #    "timestamp": "2025-02-10T06:00:06Z",
+    #    "author": {
+    #      "name": "Jean-Denis Boivin",
+    #      "email": "jd@boiv.in"
+    #    },
+    #    "committer": {
+    #      "name": "Jean-Denis Boivin",
+    #      "email": "jd@boiv.in"
+    #    }
+    #  },
+    #  "repository": {
+    #    "id": 111111,
+    #    "node_id": "dfgdfgdfg",
+    #    "name": "get-previous-action",
+    #    "full_name": "starburst997/get-previous-action",
+    #    "private": false,
+    #    "owner": {
+    #      "login": "starburst997",
+    #      "id": 11111,
+    #      "node_id": "dfssdfsdfsdfsd",
+    #      "avatar_url": "https://avatars.githubusercontent.com/u/77518?v=4",
+    #      "gravatar_id": "",
+    #      "url": "https://api.github.com/users/starburst997",
+    #      "html_url": "https://github.com/starburst997",
+    #      "followers_url": "https://api.github.com/users/starburst997/followers",
+    #      "following_url": "https://api.github.com/users/starburst997/following{/other_user}",
+    #      "gists_url": "https://api.github.com/users/starburst997/gists{/gist_id}",
+    #      "starred_url": "https://api.github.com/users/starburst997/starred{/owner}{/repo}",
+    #      "subscriptions_url": "https://api.github.com/users/starburst997/subscriptions",
+    #      "organizations_url": "https://api.github.com/users/starburst997/orgs",
+    #      "repos_url": "https://api.github.com/users/starburst997/repos",
+    #      "events_url": "https://api.github.com/users/starburst997/events{/privacy}",
+    #      "received_events_url": "https://api.github.com/users/starburst997/received_events",
+    #      "type": "User",
+    #      "user_view_type": "public",
+    #      "site_admin": false
+    #    },
+    #    "html_url": "https://github.com/starburst997/get-previous-action",
+    #    "description": "Get the previous run's sha for Github Action",
+    #    "fork": false,
+    #    "url": "https://api.github.com/repos/starburst997/get-previous-action",
+    #    "forks_url": "https://api.github.com/repos/starburst997/get-previous-action/forks",
+    #    "keys_url": "https://api.github.com/repos/starburst997/get-previous-action/keys{/key_id}",
+    #    "collaborators_url": "https://api.github.com/repos/starburst997/get-previous-action/collaborators{/collaborator}",
+    #    "teams_url": "https://api.github.com/repos/starburst997/get-previous-action/teams",
+    #    "hooks_url": "https://api.github.com/repos/starburst997/get-previous-action/hooks",
+    #    "issue_events_url": "https://api.github.com/repos/starburst997/get-previous-action/issues/events{/number}",
+    #    "events_url": "https://api.github.com/repos/starburst997/get-previous-action/events",
+    #    "assignees_url": "https://api.github.com/repos/starburst997/get-previous-action/assignees{/user}",
+    #    "branches_url": "https://api.github.com/repos/starburst997/get-previous-action/branches{/branch}",
+    #    "tags_url": "https://api.github.com/repos/starburst997/get-previous-action/tags",
+    #    "blobs_url": "https://api.github.com/repos/starburst997/get-previous-action/git/blobs{/sha}",
+    #    "git_tags_url": "https://api.github.com/repos/starburst997/get-previous-action/git/tags{/sha}",
+    #    "git_refs_url": "https://api.github.com/repos/starburst997/get-previous-action/git/refs{/sha}",
+    #    "trees_url": "https://api.github.com/repos/starburst997/get-previous-action/git/trees{/sha}",
+    #    "statuses_url": "https://api.github.com/repos/starburst997/get-previous-action/statuses/{sha}",
+    #    "languages_url": "https://api.github.com/repos/starburst997/get-previous-action/languages",
+    #    "stargazers_url": "https://api.github.com/repos/starburst997/get-previous-action/stargazers",
+    #    "contributors_url": "https://api.github.com/repos/starburst997/get-previous-action/contributors",
+    #    "subscribers_url": "https://api.github.com/repos/starburst997/get-previous-action/subscribers",
+    #    "subscription_url": "https://api.github.com/repos/starburst997/get-previous-action/subscription",
+    #    "commits_url": "https://api.github.com/repos/starburst997/get-previous-action/commits{/sha}",
+    #    "git_commits_url": "https://api.github.com/repos/starburst997/get-previous-action/git/commits{/sha}",
+    #    "comments_url": "https://api.github.com/repos/starburst997/get-previous-action/comments{/number}",
+    #    "issue_comment_url": "https://api.github.com/repos/starburst997/get-previous-action/issues/comments{/number}",
+    #    "contents_url": "https://api.github.com/repos/starburst997/get-previous-action/contents/{+path}",
+    #    "compare_url": "https://api.github.com/repos/starburst997/get-previous-action/compare/{base}...{head}",
+    #    "merges_url": "https://api.github.com/repos/starburst997/get-previous-action/merges",
+    #    "archive_url": "https://api.github.com/repos/starburst997/get-previous-action/{archive_format}{/ref}",
+    #    "downloads_url": "https://api.github.com/repos/starburst997/get-previous-action/downloads",
+    #    "issues_url": "https://api.github.com/repos/starburst997/get-previous-action/issues{/number}",
+    #    "pulls_url": "https://api.github.com/repos/starburst997/get-previous-action/pulls{/number}",
+    #    "milestones_url": "https://api.github.com/repos/starburst997/get-previous-action/milestones{/number}",
+    #    "notifications_url": "https://api.github.com/repos/starburst997/get-previous-action/notifications{?since,all,participating}",
+    #    "labels_url": "https://api.github.com/repos/starburst997/get-previous-action/labels{/name}",
+    #    "releases_url": "https://api.github.com/repos/starburst997/get-previous-action/releases{/id}",
+    #    "deployments_url": "https://api.github.com/repos/starburst997/get-previous-action/deployments"
+    #  },
+    #  "head_repository": {
+    #    "id": 111111,
+    #    "node_id": "ggg4g45t5t",
+    #    "name": "get-previous-action",
+    #    "full_name": "starburst997/get-previous-action",
+    #    "private": false,
+    #    "owner": {
+    #      "login": "starburst997",
+    #      "id": 77518,
+    #      "node_id": "dfgdgfdg345435",
+    #      "avatar_url": "https://avatars.githubusercontent.com/u/77518?v=4",
+    #      "gravatar_id": "",
+    #      "url": "https://api.github.com/users/starburst997",
+    #      "html_url": "https://github.com/starburst997",
+    #      "followers_url": "https://api.github.com/users/starburst997/followers",
+    #      "following_url": "https://api.github.com/users/starburst997/following{/other_user}",
+    #      "gists_url": "https://api.github.com/users/starburst997/gists{/gist_id}",
+    #      "starred_url": "https://api.github.com/users/starburst997/starred{/owner}{/repo}",
+    #      "subscriptions_url": "https://api.github.com/users/starburst997/subscriptions",
+    #      "organizations_url": "https://api.github.com/users/starburst997/orgs",
+    #      "repos_url": "https://api.github.com/users/starburst997/repos",
+    #      "events_url": "https://api.github.com/users/starburst997/events{/privacy}",
+    #      "received_events_url": "https://api.github.com/users/starburst997/received_events",
+    #      "type": "User",
+    #      "user_view_type": "public",
+    #      "site_admin": false
+    #    },
+    #    "html_url": "https://github.com/starburst997/get-previous-action",
+    #    "description": "Get the previous run's sha for Github Action",
+    #    "fork": false,
+    #    "url": "https://api.github.com/repos/starburst997/get-previous-action",
+    #    "forks_url": "https://api.github.com/repos/starburst997/get-previous-action/forks",
+    #    "keys_url": "https://api.github.com/repos/starburst997/get-previous-action/keys{/key_id}",
+    #    "collaborators_url": "https://api.github.com/repos/starburst997/get-previous-action/collaborators{/collaborator}",
+    #    "teams_url": "https://api.github.com/repos/starburst997/get-previous-action/teams",
+    #    "hooks_url": "https://api.github.com/repos/starburst997/get-previous-action/hooks",
+    #    "issue_events_url": "https://api.github.com/repos/starburst997/get-previous-action/issues/events{/number}",
+    #    "events_url": "https://api.github.com/repos/starburst997/get-previous-action/events",
+    #    "assignees_url": "https://api.github.com/repos/starburst997/get-previous-action/assignees{/user}",
+    #    "branches_url": "https://api.github.com/repos/starburst997/get-previous-action/branches{/branch}",
+    #    "tags_url": "https://api.github.com/repos/starburst997/get-previous-action/tags",
+    #    "blobs_url": "https://api.github.com/repos/starburst997/get-previous-action/git/blobs{/sha}",
+    #    "git_tags_url": "https://api.github.com/repos/starburst997/get-previous-action/git/tags{/sha}",
+    #    "git_refs_url": "https://api.github.com/repos/starburst997/get-previous-action/git/refs{/sha}",
+    #    "trees_url": "https://api.github.com/repos/starburst997/get-previous-action/git/trees{/sha}",
+    #    "statuses_url": "https://api.github.com/repos/starburst997/get-previous-action/statuses/{sha}",
+    #    "languages_url": "https://api.github.com/repos/starburst997/get-previous-action/languages",
+    #    "stargazers_url": "https://api.github.com/repos/starburst997/get-previous-action/stargazers",
+    #    "contributors_url": "https://api.github.com/repos/starburst997/get-previous-action/contributors",
+    #    "subscribers_url": "https://api.github.com/repos/starburst997/get-previous-action/subscribers",
+    #    "subscription_url": "https://api.github.com/repos/starburst997/get-previous-action/subscription",
+    #    "commits_url": "https://api.github.com/repos/starburst997/get-previous-action/commits{/sha}",
+    #    "git_commits_url": "https://api.github.com/repos/starburst997/get-previous-action/git/commits{/sha}",
+    #    "comments_url": "https://api.github.com/repos/starburst997/get-previous-action/comments{/number}",
+    #    "issue_comment_url": "https://api.github.com/repos/starburst997/get-previous-action/issues/comments{/number}",
+    #    "contents_url": "https://api.github.com/repos/starburst997/get-previous-action/contents/{+path}",
+    #    "compare_url": "https://api.github.com/repos/starburst997/get-previous-action/compare/{base}...{head}",
+    #    "merges_url": "https://api.github.com/repos/starburst997/get-previous-action/merges",
+    #    "archive_url": "https://api.github.com/repos/starburst997/get-previous-action/{archive_format}{/ref}",
+    #    "downloads_url": "https://api.github.com/repos/starburst997/get-previous-action/downloads",
+    #    "issues_url": "https://api.github.com/repos/starburst997/get-previous-action/issues{/number}",
+    #    "pulls_url": "https://api.github.com/repos/starburst997/get-previous-action/pulls{/number}",
+    #    "milestones_url": "https://api.github.com/repos/starburst997/get-previous-action/milestones{/number}",
+    #    "notifications_url": "https://api.github.com/repos/starburst997/get-previous-action/notifications{?since,all,participating}",
+    #    "labels_url": "https://api.github.com/repos/starburst997/get-previous-action/labels{/name}",
+    #    "releases_url": "https://api.github.com/repos/starburst997/get-previous-action/releases{/id}",
+    #    "deployments_url": "https://api.github.com/repos/starburst997/get-previous-action/deployments"
+    #  }
+    #}

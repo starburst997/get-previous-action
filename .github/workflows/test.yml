@@ -16,4 +16,5 @@ jobs:
 
       - name: Test
         run: |
-          echo ${{ steps.previous.outputs.sha }}
+          echo SHA: ${{ steps.previous.outputs.sha }}
+          echo Diff url: ${{ steps.previous.outputs.diff-url }}

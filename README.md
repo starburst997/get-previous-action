@@ -10,5 +10,6 @@ Get the previous run's sha for Github Action
   with:
     token: ${{ secrets.GH_PAT }}
 - run: |
-    echo "URL: ${{ steps.previous.outputs.sha }}"
+    echo Previous SHA: ${{ steps.previous.outputs.sha }}
+    echo Diff url: ${{ steps.previous.outputs.diff-url }}
 ```
